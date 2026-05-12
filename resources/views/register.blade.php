@@ -12,11 +12,21 @@
                         <i class="fas fa-user-plus"></i> Đăng ký
                     </h2>
                     
+                    @if ($errors->any())
+                        <div class="alert alert-danger">
+                            <ul class="mb-0">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+                    
                     <form method="POST" action="{{ url('/register') }}">
                         @csrf
                         
                         <div class="mb-3">
-                            <label for="username" class="form-label">Tên đăng nhập (User ID):</label>
+                            <label for="username" class="form-label">Tên đăng nhập:</label>
                             <input type="text" class="form-control" id="username" name="username" value="{{ old('username') }}" required minlength="3" placeholder="Ví dụ: user001">
                             <small class="text-muted">Tối thiểu 3 ký tự</small>
                         </div>

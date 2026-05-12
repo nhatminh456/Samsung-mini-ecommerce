@@ -189,7 +189,7 @@ if (passwordInput && window.location.pathname.includes('register')) {
 // Confirm password match indicator
 const registerForm = document.querySelector('form[action*="register"]');
 if (registerForm) {
-    const confirmPassword = registerForm.querySelector('input[name="confirm_password"]');
+    const confirmPassword = registerForm.querySelector('input[name="password_confirmation"]');
     
     if (confirmPassword) {
         confirmPassword.addEventListener('input', function() {
@@ -210,7 +210,8 @@ if (registerForm) {
     
     registerForm.addEventListener('submit', function(e) {
         const password = this.querySelector('input[name="password"]').value;
-        const confirmPasswordValue = this.querySelector('input[name="confirm_password"]').value;
+        const confirmPasswordInput = this.querySelector('input[name="password_confirmation"]');
+        const confirmPasswordValue = confirmPasswordInput ? confirmPasswordInput.value : '';
         
         if (password !== confirmPasswordValue) {
             e.preventDefault();

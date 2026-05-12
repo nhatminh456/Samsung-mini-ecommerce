@@ -12,12 +12,22 @@
                         <i class="fas fa-sign-in-alt"></i> Đăng nhập
                     </h2>
                     
+                    @if ($errors->any())
+                        <div class="alert alert-danger">
+                            <ul class="mb-0">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+                    
                     <form method="POST" action="{{ url('/login') }}">
                         @csrf
                         
                         <div class="mb-3">
-                            <label for="username" class="form-label">User ID hoặc Email:</label>
-                            <input type="text" class="form-control" id="username" name="username" value="{{ old('username') }}" required placeholder="Ví dụ: admin001 hoặc admin@gmail.com">
+                            <label for="username" class="form-label">Tên đăng nhập hoặc Email:</label>
+                            <input type="text" class="form-control" id="username" name="username" value="{{ old('username') }}" required placeholder="Ví dụ: cohue@gmail.com hoặc admin@gmail.com">
                         </div>
                         
                         <div class="mb-3">

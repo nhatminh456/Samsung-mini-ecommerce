@@ -58,21 +58,23 @@ class AuthController extends Controller
     // Xử lý đăng ký
     public function register(Request $request)
     {
-        // Bỏ validate username vì Database không có cột này
         $request->validate([
+            'username' => 'required|min:3|unique:users,id',
             'email'    => 'required|email|unique:users,email',
             'password' => 'required|min:6|confirmed',
         ], [
+            'username.unique' => 'Tên đăng nhập (User ID) này đã tồn tại.',
+            'username.min' => 'Tên đăng nhập tối thiểu 3 ký tự.',
             'email.unique' => 'Email này đã được đăng ký.',
             'password.confirmed' => 'Mật khẩu xác nhận không khớp.',
         ]);
 
-        // Tạo User mới (Tự sinh ID dạng USR1715420000ABC)
+        // Tạo User mới với ID chính là username người dùng nhập
         User::create([
-            'id' => 'USR' . time() . strtoupper(Str::random(3)),
+            'id' => $request->username,
             'email' => $request->email,
-            'password' => Hash::make($request->password), // Băm mật khẩu bằng Bcrypt
-            'role' => 'user' // Mặc định ai đăng ký cũng là khách hàng
+            'password' => Hash::make($request->password),
+            'role' => 'user'
         ]);
 
         return redirect('/login')->with('success', 'Đăng ký thành công! Vui lòng đăng nhập.');

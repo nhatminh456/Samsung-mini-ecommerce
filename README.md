@@ -75,3 +75,7 @@ Công nghệ sử dụng
 Backend: Laravel 12, PHP
 Frontend: Blade Template, CSS, JavaScript
 Database: MySQL 8.0
+
+tài khoản test tham khảo
+admin: eugen@gmail.com pass: 123456
+guest: cohue@gmail.com pass: 123456
