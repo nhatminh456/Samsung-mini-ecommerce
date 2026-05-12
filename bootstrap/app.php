@@ -1,5 +1,6 @@
 <?php
-
+// @Author: [Trần Nhật Minh] - [Mã sinh viên: 23140006]
+// @Project: Mini Ecommerce 
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;

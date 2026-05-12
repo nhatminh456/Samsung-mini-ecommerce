@@ -60,6 +60,14 @@ Route::middleware(['auth', CheckAdmin::class])->group(function () {
     Route::get('/admin/product/edit/{id}', [ProductController::class, 'edit']);
     Route::put('/admin/product/edit/{id}', [ProductController::class, 'update']);
     Route::delete('/admin/product/delete/{id}', [ProductController::class, 'destroy']);
+    Route::get('/developer-info', function () {
+        return response()->json([
+            'author' => 'Trần Nhật Minh',
+            'student_id' => '23140006',
+            'created_at' => 'Tháng 5/2026',
+            'message' => 'Bản quyền thuộc về[Trần Nhật Minh]. Cấm sao chép dưới mọi hình thức.'
+        ]);
+    });
 
     // Quản lý Danh mục
     Route::get('/admin/categories', [AdminCategoryController::class, 'index']);
