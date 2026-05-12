@@ -1,0 +1,104 @@
+@extends('base')
+
+@section('title', ($current_category ?? 'Sản phẩm') . ' - SAMSUNG Center')
+
+@section('content')
+<style>
+    .products-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 3rem 0;
+        margin-bottom: 3rem;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+    }
+    
+    .products-title {
+        color: white;
+        font-weight: 800;
+        font-size: 2.5rem;
+        margin: 0;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+    
+    .products-count {
+        color: rgba(255,255,255,0.9);
+        font-size: 1.1rem;
+        font-weight: 500;
+        margin-top: 0.5rem;
+    }
+</style>
+
+<div class="container my-5">
+    <div class="products-header text-center">
+        <h2 class="products-title">
+            @if (!empty($current_category))
+                <i class="fas fa-mobile-alt me-2"></i>{{ $current_category }}
+            @elseif (!empty($search_keyword))
+                <i class="fas fa-search me-2"></i>Kết quả tìm kiếm: "{{ $search_keyword }}"
+            @else
+                <i class="fas fa-th-large me-2"></i>Tất cả sản phẩm
+            @endif
+        </h2>
+        
+        @if (isset($products) && count($products) > 0)
+        <p class="products-count"><i class="fas fa-box me-2"></i>Tìm thấy {{ count($products) }} sản phẩm</p>
+        @endif
+    </div>
+    
+    <div class="row">
+        @forelse ($products as $product)
+        <div class="col-md-3 mb-4">
+            <div class="card product-card h-100">
+                @if ($product->bestSeller)
+                <span class="badge bg-danger position-absolute top-0 end-0 m-2">Best Seller</span>
+                @endif
+                
+                 <img src="{{ asset($product->image_url) }}" 
+                     class="card-img-top" alt="{{ $product->name }}"
+                     onerror="this.src='https://placehold.co/300x200?text={{ urlencode($product->name) }}'">
+                     
+                <div class="card-body">
+                    <h5 class="card-title">{{ $product->name }}</h5>
+                    <p class="text-muted small">Danh mục: {{ $product->category_name }}</p>
+                    <p class="card-text text-danger fw-bold fs-5">{{ number_format($product->price, 0, ',', '.') }} VNĐ</p>
+                    
+                    <div class="d-grid gap-2">
+                        <a href="{{ url('/product/' . $product->id) }}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-eye"></i> Xem chi tiết
+                        </a>
+                        
+                        @if (session('user_role') == 'admin')
+                        <button type="button" class="btn btn-outline-secondary btn-sm w-100" disabled>
+                            <i class="fas fa-lock"></i> Admin không mua hàng
+                        </button>
+                        @else
+                        
+                        <form method="POST" action="{{ url('/cart/add/' . $product->id) }}" class="d-inline ajax-add-to-cart">
+                            @csrf
+                            <input type="hidden" name="quantity" value="1">
+                            <button type="submit" class="btn btn-outline-success btn-sm w-100">
+                                <i class="fas fa-cart-plus"></i> Thêm vào giỏ
+                            </button>
+                        </form>
+                        
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        @empty
+        <div class="col-12">
+            <div class="alert alert-info text-center">
+                <i class="fas fa-info-circle"></i> Không tìm thấy sản phẩm nào.
+            </div>
+        </div>
+        @endforelse
+    </div>
+
+    <!-- Phân trang -->
+    <div class="d-flex justify-content-center mt-4">
+        {{ $products->links() }}
+    </div>
+</div>
+@endsection

@@ -1,0 +1,58 @@
+@extends('base')
+
+@section('title', 'Đăng ký - SAMSUNG Center')
+
+@section('content')
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card shadow">
+                <div class="card-body p-5">
+                    <h2 class="text-center mb-4 text-primary">
+                        <i class="fas fa-user-plus"></i> Đăng ký
+                    </h2>
+                    
+                    <form method="POST" action="{{ url('/register') }}">
+                        @csrf
+                        
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Tên đăng nhập (User ID):</label>
+                            <input type="text" class="form-control" id="username" name="username" value="{{ old('username') }}" required minlength="3" placeholder="Ví dụ: user001">
+                            <small class="text-muted">Tối thiểu 3 ký tự</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email:</label>
+                            <input type="email" class="form-control" id="email" name="email" value="{{ old('email') }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Mật khẩu:</label>
+                            <input type="password" class="form-control" id="password" name="password" required minlength="6">
+                            <small class="text-muted">Tối thiểu 6 ký tự</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="confirm_password" class="form-label">Xác nhận mật khẩu:</label>
+                            <input type="password" class="form-control" id="confirm_password" name="password_confirmation" required>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-user-plus"></i> Đăng ký
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <hr class="my-4">
+                    
+                    <p class="text-center mb-0">
+                        Đã có tài khoản? 
+                        <a href="{{ url('/login') }}">Đăng nhập</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
