@@ -163,7 +163,7 @@
             </div>
             <hr class="bg-white">
             <div class="text-center">
-                <p>&copy; {{ date('Y') }} SAMSUM Center. Built with Laravel & PHP.</p>
+                <p>&copy; {{ date('Y') }} SAMSUNG Center. Built with Laravel & PHP.</p>
             </div>
         </div>
     </footer>

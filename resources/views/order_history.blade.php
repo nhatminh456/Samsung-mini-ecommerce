@@ -21,6 +21,7 @@
                             <th class="py-3 px-4">Mã đơn hàng</th>
                             <th class="py-3">Ngày đặt</th>
                             <th class="py-3">Tổng tiền</th>
+                            <th class="py-3">Thanh toán</th>
                             <th class="py-3">Trạng thái</th>
                             <th class="py-3 text-center">Thao tác</th>
                         </tr>
@@ -36,6 +37,14 @@
                             
                             <td class="text-danger fw-bold">{{ number_format($order->total_amount, 0, ',', '.') }} ₫</td>
                             
+                            <td>
+                                @if ($order->payment_status === 'paid')
+                                    <span class="badge bg-success px-3 py-2 rounded-pill"><i class="fas fa-check-circle"></i> Đã thanh toán</span>
+                                @else
+                                    <span class="badge bg-danger px-3 py-2 rounded-pill"><i class="fas fa-times-circle"></i> Chưa TT</span>
+                                @endif
+                            </td>
+
                             <td>
                                 @if ($order->status == 'pending')
                                     <span class="badge bg-warning text-dark px-3 py-2 rounded-pill">Chờ xử lý</span>

@@ -22,9 +22,9 @@ class AuthController extends Controller
         $loginInput = $request->username; // Form gửi lên biến name="username"
         $password = $request->password;
 
-        // Tìm user theo email hoặc id
+        // Tìm user theo email hoặc username (cột name)
         $user = User::where('email', $loginInput)
-            ->orWhere('id', $loginInput)
+            ->orWhere('name', $loginInput)
             ->first();
 
         // Kiểm tra mật khẩu
@@ -59,7 +59,7 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $request->validate([
-            'username' => 'required|min:3|unique:users,id',
+            'username' => 'required|min:3|unique:users,name',
             'email'    => 'required|email|unique:users,email',
             'password' => 'required|min:6|confirmed',
         ], [
@@ -69,9 +69,9 @@ class AuthController extends Controller
             'password.confirmed' => 'Mật khẩu xác nhận không khớp.',
         ]);
 
-        // Tạo User mới với ID chính là username người dùng nhập
+        // Tạo User mới
         User::create([
-            'id' => $request->username,
+            'name' => $request->username,
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role' => 'user'

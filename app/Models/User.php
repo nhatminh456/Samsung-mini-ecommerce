@@ -11,15 +11,8 @@ class User extends Authenticatable
 
     protected $table = 'users';
 
-    // Khai báo khóa chính là chuỗi
-    protected $primaryKey = 'id';
-    protected $keyType = 'string';
-    public $incrementing = false;
-
-    public $timestamps = false;
-
     protected $fillable = [
-        'id',
+        'name',
         'email',
         'password',
         'role'

@@ -27,13 +27,8 @@ class AdminCategoryController extends Controller
             'tenDM.required' => 'Vui lòng nhập tên danh mục'
         ]);
 
-        // Lấy ID tự tăng bằng cách tìm max id hiện tại (do DB không cấu hình AUTO_INCREMENT)
-        $maxId = Category::max('id');
-        $newId = $maxId ? $maxId + 1 : 1;
-
         Category::create([
-            'id' => $newId,
-            'tenDM' => $request->tenDM
+            'name' => $request->tenDM
         ]);
 
         return redirect('/admin/categories')->with('success', 'Thêm danh mục thành công');
@@ -56,7 +51,7 @@ class AdminCategoryController extends Controller
         ]);
 
         $category->update([
-            'tenDM' => $request->tenDM
+            'name' => $request->tenDM
         ]);
 
         return redirect('/admin/categories')->with('success', 'Cập nhật danh mục thành công');

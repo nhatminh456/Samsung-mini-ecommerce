@@ -16,6 +16,11 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(response => response.json())
             .then(data => {
+                if (data.redirect) {
+                    window.location.href = data.redirect;
+                    return;
+                }
+
                 if (data.success) {
                     // Update cart badge
                     const badge = document.getElementById('cart-badge');

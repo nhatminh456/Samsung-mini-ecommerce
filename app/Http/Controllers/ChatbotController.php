@@ -12,22 +12,28 @@ class ChatbotController extends Controller
     {
         $userMessage = $request->input('message');
 
-        // 1. MÓC DỮ LIỆU TỪ DATABASE (Đã sửa tên cột và đổi latest thành orderBy)
-        $products = Product::select('tenSP', 'gia', 'stock_quantity')
-            ->orderBy('id', 'desc') // Thay cho latest() để không bị lỗi created_at
-            ->take(20)
+        // 1. MÓC DỮ LIỆU TỪ DATABASE (Theo cấu trúc mới: bảng products chứa name, variants chứa price và stock)
+        $products = Product::with('variants')
+            ->orderBy('id', 'desc')
+            ->take(100)
             ->get();
 
-        // 2. BIẾN DỮ LIỆU THÀNH CHỮ CHO AI ĐỌC (Đã sửa theo tên cột MySQL)
+        // 2. BIẾN DỮ LIỆU THÀNH CHỮ CHO AI ĐỌC 
         $productData = "";
         foreach ($products as $p) {
-            $price = number_format($p->gia, 0, ',', '.') . 'đ';
-            $status = $p->stock_quantity > 0 ? "Còn {$p->stock_quantity} chiếc" : "Hết hàng";
-            $productData .= "- {$p->tenSP}: Giá {$price} ({$status})\n";
+            $price = 0;
+            $stock = 0;
+            if ($p->variants->isNotEmpty()) {
+                $price = $p->variants->first()->price;
+                $stock = $p->variants->sum('stock_quantity');
+            }
+            $formattedPrice = number_format($price, 0, ',', '.') . 'đ';
+            $status = $stock > 0 ? "Còn {$stock} chiếc" : "Hết hàng";
+            $productData .= "- {$p->name}: Giá bán từ {$formattedPrice} ({$status})\n";
         }
 
         // 3. TẠO "THẦN CHÚ" (SYSTEM PROMPT) ÉP KHUÔN KHỔ CHO AI
-        $systemPrompt = "Bạn là trợ lý ảo tư vấn bán hàng nhiệt tình, duyên dáng của cửa hàng điện thoại SAMSUM Center.
+        $systemPrompt = "Bạn là trợ lý ảo tư vấn bán hàng nhiệt tình, duyên dáng của cửa hàng điện thoại Samsung Center.
         Tuyệt đối không bịa đặt thông tin hoặc giá cả. Chỉ tư vấn dựa trên danh sách sản phẩm hiện có của cửa hàng sau đây:
         \n{$productData}\n
         Nếu khách hỏi sản phẩm không có trong danh sách, hãy xin lỗi khéo léo và giới thiệu các mẫu tương tự đang có.
@@ -60,7 +66,8 @@ class ChatbotController extends Controller
             }
 
             // Nếu API Google bị lỗi/quá tải
-            return response()->json(['reply' => 'Dạ xin lỗi bạn, cửa hàng đang đông khách quá, mình sẽ tư vấn cho bạn ngay sau ít phút nhé! (Hệ thống AI bận)']);
+            $error = $response->body();
+            return response()->json(['reply' => 'Dạ xin lỗi bạn, cửa hàng đang đông khách quá! [Chi tiết bộ phận AI báo lỗi: ' . $error . ']']);
         } catch (\Exception $e) {
             // Lỗi đứt cáp, rớt mạng...
             return response()->json(['reply' => 'Dạ kết nối mạng của mình đang bị chập chờn, bạn thử nhắn lại nhé!']);

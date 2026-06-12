@@ -3,20 +3,20 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\ProductVariant;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
 
 class CartController extends Controller
 {
-
     public function index()
     {
-        $cartSession = session()->get('cart', []);
-
+        $cartSession = Session::get('cart', []);
         $cart = [];
         $total = 0;
 
-        // Tính tổng tiền và ép kiểu array sang object để View Blade dùng được cú pháp $item->name
-        foreach ($cartSession as $id => $details) {
+        foreach ($cartSession as $variantId => $details) {
             $details['subtotal'] = $details['price'] * $details['quantity'];
             $total += $details['subtotal'];
             $cart[] = (object) $details;
@@ -25,82 +25,114 @@ class CartController extends Controller
         return view('cart', compact('cart', 'total'));
     }
 
-    // 2. Thêm sản phẩm vào giỏ
-    public function add(Request $request, $id)
+    // NÂNG CẤP: Xử lý thêm vào giỏ bằng Variant ID thay vì Product ID
+    public function add(Request $request, $id = null)
     {
-        $product = Product::findOrFail($id);
-        $cart = session()->get('cart', []);
+        if (!Auth::check()) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'redirect' => route('login')]);
+            }
+            return redirect()->route('login')->with('danger', 'Bạn phải đăng nhập để thêm sản phẩm vào giỏ hàng!');
+        }
 
-        // Nếu sản phẩm đã có trong giỏ, tăng số lượng lên 1
-        if (isset($cart[$id])) {
-            $cart[$id]['quantity']++;
+        // Lấy variant_id. NẾU thêm từ danh sách (truyền ID của Product), tự động lấy Variant đầu tiên!
+        if ($id) {
+            $product = Product::with('variants', 'images')->findOrFail($id);
+            if ($product->variants->isEmpty()) {
+                return response()->json(['success' => false, 'message' => 'Sản phẩm này hiện ngừng kinh doanh.']);
+            }
+            $variant = $product->variants->first();
+            $quantity = $request->quantity ?? 1;
         } else {
-            // Nếu chưa có, thêm mới vào mảng
-            $cart[$id] = [
-                'id' => $product->id,
-                'name' => $product->name,
-                'price' => $product->price,
-                'quantity' => 1,
-                'image_url' => $product->image_url
+            // Validate nếu lấy từ form chi tiết sản phẩm
+            $request->validate([
+                'variant_id' => 'required|exists:product_variants,id',
+                'quantity'   => 'required|numeric|min:1'
+            ]);
+            $variant = ProductVariant::with('product.images')->findOrFail($request->variant_id);
+            $product = $variant->product;
+            $quantity = $request->quantity;
+        }
+
+        // Kiểm tra tồn kho
+        if ($variant->stock_quantity <= 0) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Sản phẩm đã hết hàng!']);
+            }
+            return back()->with('danger', 'Sản phẩm đã hết hàng!');
+        }
+
+        if ($variant->stock_quantity < $quantity) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Rất tiếc, số lượng trong kho không đủ!']);
+            }
+            return back()->with('danger', 'Rất tiếc, số lượng trong kho không đủ!');
+        }
+
+        $cart = Session::get('cart', []);
+
+        // Dùng Variant ID làm Key của giỏ hàng
+        if (isset($cart[$variant->id])) {
+            $cart[$variant->id]['quantity'] += $quantity;
+        } else {
+            // Lấy ảnh hiển thị: Ưu tiên ảnh riêng của Variant, không có thì lấy ảnh mặc định của Product
+            $imageUrl = $product->images->first() ? $product->images->first()->image_path : 'images/default.jpg';
+
+            $cart[$variant->id] = [
+                'id'         => $variant->id,
+                'product_id' => $product->id,
+                'name'       => $product->name,
+                'color'      => $variant->color,
+                'storage'    => $variant->storage,
+                'price'      => $variant->price,
+                'quantity'   => $quantity,
+                'image_url'  => $imageUrl
             ];
         }
 
-        // Lưu ngược lại vào Session
-        session()->put('cart', $cart);
+        Session::put('cart', $cart);
 
-        // Tính tổng số lượng hàng trong giỏ
-        $totalItems = count($cart);
-
-        // Trả về JSON nếu là request từ Ajax
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
-                'success' => true,
-                'message' => 'Đã thêm ' . $product->name . ' vào giỏ hàng!',
-                'cart_count' => $totalItems
+                'success'    => true,
+                'message'    => 'Đã thêm ' . $product->name . ' vào giỏ hàng!',
+                'cart_count' => count($cart)
             ]);
         }
 
-        // Trở lại trang trước đó (hoặc trang sản phẩm) kèm thông báo
         return back()->with('success', 'Đã thêm ' . $product->name . ' vào giỏ hàng!');
     }
 
-    // 3. Cập nhật số lượng sản phẩm
     public function update(Request $request, $id)
     {
-        $request->validate([
-            'quantity' => 'required|numeric|min:1|max:99'
-        ]);
-
-        $cart = session()->get('cart');
+        $request->validate(['quantity' => 'required|numeric|min:1|max:99']);
+        $cart = Session::get('cart');
 
         if (isset($cart[$id])) {
             $cart[$id]['quantity'] = $request->quantity;
-            session()->put('cart', $cart);
+            Session::put('cart', $cart);
             return back()->with('success', 'Đã cập nhật số lượng thành công!');
         }
 
         return back()->with('danger', 'Không tìm thấy sản phẩm trong giỏ hàng.');
     }
 
-    // 4. Xóa 1 sản phẩm khỏi giỏ
     public function remove($id)
     {
-        $cart = session()->get('cart');
+        $cart = Session::get('cart');
 
         if (isset($cart[$id])) {
-            unset($cart[$id]); // Xóa phần tử khỏi mảng
-            session()->put('cart', $cart);
+            unset($cart[$id]);
+            Session::put('cart', $cart);
             return back()->with('success', 'Đã xóa sản phẩm khỏi giỏ hàng!');
         }
 
         return back()->with('danger', 'Không tìm thấy sản phẩm.');
     }
 
-    // 5. Xóa toàn bộ giỏ hàng
     public function clear()
     {
-        // Xóa hẳn key 'cart' khỏi session
-        session()->forget('cart');
+        Session::forget('cart');
         return back()->with('info', 'Đã làm trống giỏ hàng.');
     }
 }

@@ -4,15 +4,7 @@
 
 @section('content')
 <div class="container-fluid my-4">
-    <h2 class="mb-4">Quản lý đơn hàng</h2>
     
-    <div class="row mb-3">
-        <div class="col-md-12">
-            <a href="{{ url('/admin/products') }}" class="btn btn-secondary">
-                <i class="fas fa-box"></i> Quản lý sản phẩm
-            </a>
-        </div>
-    </div>
     
     <div class="card">
         <div class="card-body">

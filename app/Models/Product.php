@@ -2,58 +2,77 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
 {
-    protected $table = 'products'; // Tên bảng
+    use HasFactory;
 
-    // Khai báo khóa chính là chuỗi, không tự tăng
-    protected $primaryKey = 'id';
-    protected $keyType = 'string';
-    public $incrementing = false;
+    protected $table = 'products';
 
-    // Tắt timestamps vì bảng không có created_at/updated_at
-    public $timestamps = false;
+
 
     protected $fillable = [
-        'id',
-        'tenSP',
-        'gia',
-        'categoryID',
-        'image',
-        'mota',
-        'namSX',
-        'thongso',
-        'bestSeller',
-        'stock_quantity'
+        'category_id', 
+        'name',        
+        'description', 
+        'specifications', 
+        'release_year',   
+        'is_bestseller'   
     ];
 
-    // Tạo Accessor để code Controller cũ ($product->name, $product->price) vẫn chạy được mượt mà
-    public function getNameAttribute()
-    {
-        return $this->tenSP;
-    }
-
-    public function getPriceAttribute()
-    {
-        return $this->gia;
-    }
-
-    public function getImageUrlAttribute()
-    {
-        if (!$this->image) {
-            return 'images/default.jpg';
-        }
-        if (str_starts_with($this->image, 'http') || str_starts_with($this->image, 'https') || str_starts_with($this->image, 'data:image')) {
-            return $this->image;
-        }
-        return 'images/' . $this->image;
-    }
+    // ==========================================
+    // 1. CÁC MỐI QUAN HỆ (RELATIONSHIPS)
+    // ==========================================
 
     public function category()
     {
-        return $this->belongsTo(Category::class, 'categoryID', 'id');
+        // Sửa lại khóa ngoại thành category_id
+        return $this->belongsTo(Category::class, 'category_id', 'id');
+    }
+
+    public function variants()
+    {
+        return $this->hasMany(ProductVariant::class);
+    }
+
+    public function images()
+    {
+        return $this->hasMany(ProductImage::class);
+    }
+
+    
+
+    // Lấy giá hiển thị (Lấy giá của biến thể đầu tiên)
+    public function getPriceAttribute()
+    {
+        $firstVariant = $this->variants->first();
+        return $firstVariant ? $firstVariant->price : 0;
+    }
+
+    // Lấy số lượng kho (Tổng kho của tất cả biến thể)
+    public function getStockQuantityAttribute()
+    {
+        return $this->variants->sum('stock_quantity');
+    }
+
+    // Lấy ảnh đại diện (Lấy tấm ảnh đầu tiên trong bộ sưu tập)
+    public function getImageUrlAttribute()
+    {
+        $firstImage = $this->images->first();
+
+        if (!$firstImage) {
+            return 'images/default.jpg';
+        }
+
+        $imagePath = $firstImage->image_path;
+
+        if (str_starts_with($imagePath, 'http') || str_starts_with($imagePath, 'https') || str_starts_with($imagePath, 'data:image')) {
+            return $imagePath;
+        }
+
+        return 'images/' . $imagePath;
     }
 
     public function getCategoryNameAttribute()

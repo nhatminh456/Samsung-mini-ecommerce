@@ -4,39 +4,36 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\Category;
+use App\Models\ProductVariant;
+use App\Models\ProductImage;
 use Illuminate\Http\Request;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str; // Thêm thư viện này để tạo mã ID ngẫu nhiên
 
 class ProductController extends Controller
 {
     public function home()
     {
         $categories = Category::all();
-        $bestsellers = Product::where('bestSeller', 1)->take(8)->get();
-        // Lấy danh sách sản phẩm mới nhất
-        $products = Product::orderBy('id', 'desc')->take(8)->get();
+        $bestsellers = Product::with(['images', 'variants'])->where('is_bestseller', 1)->take(8)->get();
+        $products = Product::with(['images', 'variants'])->orderBy('id', 'desc')->take(8)->get();
 
         return view('index', compact('categories', 'bestsellers', 'products'));
     }
 
     public function index(Request $request, $category_id = null)
     {
-        $query = Product::query();
+        $query = Product::with(['images', 'variants']);
 
-        // 1. Tìm kiếm theo tên
         if ($request->has('q')) {
-            $query->where('tenSP', 'like', '%' . $request->q . '%');
+            $query->where('name', 'like', '%' . $request->q . '%');
         }
 
-        // 2. Lọc theo danh mục từ URL parameter hoặc query string
         $catId = $category_id ?? $request->category_id;
         if ($catId) {
-            $query->where('categoryID', $catId);
+            $query->where('category_id', $catId);
         }
 
-        // Tích hợp phân trang (12 sản phẩm trên 1 trang), dán append(request->query) để cho phép tìm kiếm và pagination chạy mượt với nhau
         $products = $query->paginate(12)->appends($request->query());
         $categories = Category::all();
 
@@ -45,9 +42,10 @@ class ProductController extends Controller
 
     public function show($id)
     {
-        $product = Product::findOrFail($id);
-        // Đổi 'category_id' thành 'categoryID'
-        $related_products = Product::where('categoryID', $product->categoryID)
+        $product = Product::with(['category', 'images', 'variants.images'])->findOrFail($id);
+
+        $related_products = Product::with(['images', 'variants'])
+            ->where('category_id', $product->category_id)
             ->where('id', '!=', $id)
             ->take(4)
             ->get();
@@ -57,8 +55,7 @@ class ProductController extends Controller
 
     public function adminIndex()
     {
-
-        $products = Product::with('category')->orderByRaw('CAST(id AS UNSIGNED) asc')->get();
+        $products = Product::with(['category', 'variants'])->orderBy('id', 'desc')->get();
         return view('admin_products', compact('products'));
     }
 
@@ -71,70 +68,192 @@ class ProductController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required',
-            'price' => 'required|numeric|min:1',
-            'category_id' => 'required|exists:categories,id',
-            'stock_quantity' => 'required|numeric|min:0',
-            'image_file' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048'
+            'name'             => 'required',
+            'category_id'      => 'required|exists:categories,id',
+            'variants.0.price' => 'required|numeric|min:1',
         ], [
-            'price.min' => 'Giá sản phẩm phải lớn hơn 0',
-            'stock_quantity.min' => 'Số lượng không được âm'
+            'variants.0.price.required' => 'Giá phiên bản đầu tiên là bắt buộc',
+            'variants.0.price.min'      => 'Giá phải lớn hơn 0',
         ]);
 
-        $imageUrl = $this->handleImageUpload($request);
-        if ($imageUrl && is_string($imageUrl)) {
-            $imageUrl = trim($imageUrl);
+        DB::beginTransaction();
+
+        try {
+            // 1. Lưu sản phẩm chính
+            $product = Product::create([
+                'name'          => $request->name,
+                'category_id'   => $request->category_id,
+                'description'   => $request->description,
+                'is_bestseller' => $request->has('bestSeller') ? 1 : 0,
+            ]);
+
+            // 2. Lưu từng variant + ảnh
+            foreach ($request->variants as $index => $variantData) {
+                if (empty($variantData['price'])) continue;
+
+                $variant = ProductVariant::create([
+                    'product_id'     => $product->id,
+                    'color'          => $variantData['color'] ?? 'Mặc định',
+                    'storage'        => $variantData['storage'] ?? 'Mặc định',
+                    'price'          => $variantData['price'],
+                    'stock_quantity' => $variantData['stock_quantity'] ?? 0,
+                    'sku'            => 'SS-' . time() . rand(10, 99),
+                ]);
+
+                // 3a. Ảnh upload từ máy
+                if ($request->hasFile("variant_images.$index")) {
+                    foreach ($request->file("variant_images.$index") as $file) {
+                        $filename = time() . '_' . rand(100, 999) . '_' . $file->getClientOriginalName();
+                        $file->move(public_path('images'), $filename);
+
+                        ProductImage::create([
+                            'product_id' => $product->id,
+                            'variant_id' => $variant->id,
+                            'image_path' => 'images/' . $filename,
+                        ]);
+                    }
+                }
+
+                // 3b. Ảnh nhập từ URL
+                $urls = $request->input("variant_image_urls.$index", []);
+                foreach ($urls as $url) {
+                    $url = $this->cleanImageUrl(trim($url));
+                    if (empty($url)) continue;
+
+                    ProductImage::create([
+                        'product_id' => $product->id,
+                        'variant_id' => $variant->id,
+                        'image_path' => $url,   // lưu thẳng URL vào image_path
+                    ]);
+                }
+            }
+
+            DB::commit();
+            return redirect('/admin/products')->with('success', 'Tạo sản phẩm thành công!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('danger', 'Lỗi hệ thống: ' . $e->getMessage());
         }
-
-        // Lấy ID tự tăng bằng cách tìm max integer hiện tại
-        $maxId = DB::table('products')->selectRaw('MAX(CAST(id AS UNSIGNED)) as max_id')->value('max_id');
-        $newId = $maxId ? $maxId + 1 : 1;
-
-        Product::create([
-            'id' => (string) $newId,
-            'tenSP' => $request->name,
-            'gia' => $request->price,
-            'categoryID' => $request->category_id,
-            'stock_quantity' => $request->stock_quantity,
-            'mota' => $request->description,
-            'image' => $imageUrl
-        ]);
-
-        return redirect('/admin/products')->with('success', 'Tạo sản phẩm thành công');
     }
 
     public function edit($id)
     {
-        $product = Product::findOrFail($id);
+        $product = Product::with(['variants.images', 'images'])->findOrFail($id);
         $categories = Category::all();
         return view('admin_edit_product', compact('product', 'categories'));
     }
 
     public function update(Request $request, $id)
     {
-        $product = Product::findOrFail($id);
+        $product = Product::with('variants')->findOrFail($id);
 
         $request->validate([
-            'name' => 'required',
-            'price' => 'required|numeric|min:1',
+            'name'        => 'required',
             'category_id' => 'required|exists:categories,id',
-            'stock_quantity' => 'required|numeric|min:0',
-            'image_file' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048'
         ]);
 
-        $imageUrl = $request->hasFile('image_file') ? $this->handleImageUpload($request) : $request->image_url;
+        DB::beginTransaction();
 
-        // Cập nhật theo tên cột mới
-        $product->update([
-            'tenSP' => $request->name,
-            'gia' => $request->price,
-            'categoryID' => $request->category_id,
-            'stock_quantity' => $request->stock_quantity,
-            'mota' => $request->description,
-            'image' => $imageUrl
-        ]);
+        try {
+            // 1. Cập nhật thông tin chính
+            $product->update([
+                'name'          => $request->name,
+                'category_id'   => $request->category_id,
+                'description'   => $request->description,
+                'is_bestseller' => $request->has('bestSeller') ? 1 : 0,
+            ]);
 
-        return redirect('/admin/products')->with('success', 'Cập nhật sản phẩm thành công');
+            // 2. Cập nhật từng variant cũ đã có (nếu có)
+            if ($request->has('variants')) {
+                foreach ($request->variants as $variantId => $variantData) {
+                    $variant = ProductVariant::find($variantId);
+                    if (!$variant || $variant->product_id != $product->id) continue;
+
+                    $variant->update([
+                        'color'          => $variantData['color'] ?? $variant->color,
+                        'storage'        => $variantData['storage'] ?? $variant->storage,
+                        'price'          => $variantData['price'] ?? $variant->price,
+                        'stock_quantity' => $variantData['stock_quantity'] ?? $variant->stock_quantity,
+                    ]);
+
+                    // 3a. Ảnh upload từ máy cho variant cũ
+                    if ($request->hasFile("variant_images.$variantId")) {
+                        foreach ($request->file("variant_images.$variantId") as $file) {
+                            $filename = time() . '_' . rand(100, 999) . '_' . $file->getClientOriginalName();
+                            $file->move(public_path('images'), $filename);
+
+                            ProductImage::create([
+                                'product_id' => $product->id,
+                                'variant_id' => $variant->id,
+                                'image_path' => 'images/' . $filename,
+                            ]);
+                        }
+                    }
+
+                    // 3b. Ảnh nhập từ URL cho variant cũ
+                    $urls = $request->input("variant_image_urls.$variantId", []);
+                    foreach ($urls as $url) {
+                        $url = $this->cleanImageUrl(trim($url));
+                        if (empty($url)) continue;
+
+                        ProductImage::create([
+                            'product_id' => $product->id,
+                            'variant_id' => $variant->id,
+                            'image_path' => $url,
+                        ]);
+                    }
+                }
+            }
+
+            // 4. Thêm các variant mới (nếu Admin có nhấn thêm ở màn hình sửa)
+            if ($request->has('new_variants')) {
+                foreach ($request->new_variants as $index => $variantData) {
+                    if (empty($variantData['price'])) continue;
+
+                    $variant = ProductVariant::create([
+                        'product_id'     => $product->id,
+                        'color'          => $variantData['color'] ?? 'Mặc định',
+                        'storage'        => $variantData['storage'] ?? 'Mặc định',
+                        'price'          => $variantData['price'],
+                        'stock_quantity' => $variantData['stock_quantity'] ?? 0,
+                        'sku'            => 'SS-' . time() . rand(10, 99),
+                    ]);
+
+                    // 5a. Ảnh upload từ máy cho variant mới
+                    if ($request->hasFile("new_variant_images.$index")) {
+                        foreach ($request->file("new_variant_images.$index") as $file) {
+                            $filename = time() . '_' . rand(100, 999) . '_' . $file->getClientOriginalName();
+                            $file->move(public_path('images'), $filename);
+
+                            ProductImage::create([
+                                'product_id' => $product->id,
+                                'variant_id' => $variant->id,
+                                'image_path' => 'images/' . $filename,
+                            ]);
+                        }
+                    }
+
+                    // 5b. Ảnh nhập từ URL cho variant mới
+                    $urls = $request->input("new_variant_image_urls.$index", []);
+                    foreach ($urls as $url) {
+                        $url = $this->cleanImageUrl(trim($url));
+                        if (empty($url)) continue;
+
+                        ProductImage::create([
+                            'product_id' => $product->id,
+                            'variant_id' => $variant->id,
+                            'image_path' => $url,
+                        ]);
+                    }
+                }
+            }
+
+            DB::commit();
+            return redirect('/admin/products')->with('success', 'Cập nhật sản phẩm thành công!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('danger', 'Lỗi cập nhật: ' . $e->getMessage());
+        }
     }
 
     public function destroy($id)
@@ -145,35 +264,18 @@ class ProductController extends Controller
             return redirect('/admin/products')->with('success', 'Xóa sản phẩm thành công');
         } catch (QueryException $e) {
             if ($e->getCode() == '23000') {
-                return back()->with('danger', 'Không thể xóa sản phẩm vì đã tồn tại trong đơn hàng');
+                return back()->with('danger', 'Không thể xóa vì đã tồn tại trong đơn hàng');
             }
             return back()->with('danger', 'Đã xảy ra lỗi khi xóa');
         }
     }
 
-    private function handleImageUpload(Request $request)
+    private function cleanImageUrl($url)
     {
-        if ($request->hasFile('image_file')) {
-            $file = $request->file('image_file');
-            $filename = time() . '_' . $file->getClientOriginalName();
-            $file->move(public_path('images'), $filename);
-
-            return 'images/' . $filename;
+        if (str_contains(strtolower($url), 'google.com/imgres')) {
+            parse_str(parse_url($url, PHP_URL_QUERY), $params);
+            if (isset($params['imgurl'])) return $params['imgurl'];
         }
-
-        $url = $request->image_url;
-        if ($url) {
-            // Xử lý link từ Google Tìm kiếm ảnh
-            if (str_contains(strtolower($url), 'google.com/imgres')) {
-                parse_str(parse_url($url, PHP_URL_QUERY), $params);
-                if (isset($params['imgurl'])) return $params['imgurl'];
-            }
-
-            // Xử lý một số link dài khác nếu cần thiết (loại bỏ tham số query không cần thiết)
-            // Tạm thời trả về nguyên mẫu URL để hiển thị, front-end sẽ tự load
-            return $url;
-        }
-
-        return null;
+        return $url;
     }
 }

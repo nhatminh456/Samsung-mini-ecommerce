@@ -37,13 +37,7 @@
 </style>
 
 <div class="container my-4">
-    <!-- Admin Header -->
-    <div class="admin-header text-center text-white">
-        <div class="header-content">
-            <h2 class="display-5 fw-bold mb-3"><i class="fas fa-users"></i> Quản lý Người dùng</h2>
-            <p class="lead mb-0 opacity-75">Quản lý tài khoản và phân quyền hệ thống</p>
-        </div>
-    </div>
+
 
     <!-- Toolbar -->
     <div class="row mb-4 align-items-center">

@@ -29,7 +29,7 @@ class AdminUserController extends Controller
         ]);
 
         User::create([
-            'id' => 'USR' . time() . strtoupper(Str::random(3)),
+            'name' => 'USR' . time() . strtoupper(Str::random(3)),
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role' => $request->role
@@ -73,12 +73,12 @@ class AdminUserController extends Controller
     public function destroy($id)
     {
         $user = User::findOrFail($id);
-        
+
         // Không cho phép xóa chính mình
         if ($user->id === auth()->user()->id) {
             return back()->with('danger', 'Bạn không được phép xóa tài khoản đang đăng nhập!');
         }
-        
+
         // Hoặc có thể check ràng buộc khóa ngoại với đơn hàng ở đây nếu cần
 
         try {

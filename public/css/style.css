@@ -449,7 +449,6 @@ footer a:hover {
 /* Legacy template style overrides */
 .products-header,
 .admin-header,
-.product-price-main,
 .btn-add-cart,
 .btn-buy-now,
 .stats-icon,
@@ -481,3 +480,34 @@ footer a:hover {
 .stats-text {
     color: var(--brand-strong) !important;
 }
+
+/* Pagination Customization - Samsung Style */
+.pagination .page-item .page-link {
+    color: #2d3748;
+    border-radius: 8px;
+    margin: 0 4px;
+    border: 1px solid #e2e8f0;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+.pagination .page-item .page-link:hover {
+    background-color: #f7fafc;
+    color: #2189ff;
+    border-color: #cbd5e0;
+}
+.pagination .page-item.active .page-link {
+    background-color: #2189ff;
+    border-color: #2189ff;
+    color: #ffffff;
+    box-shadow: 0 2px 5px rgba(33, 137, 255, 0.3);
+}
+.pagination .page-item.disabled .page-link {
+    color: #a0aec0;
+    background-color: transparent;
+    border-color: transparent;
+}
+.pagination .page-item:first-child .page-link,
+.pagination .page-item:last-child .page-link {
+    border-radius: 8px;
+}
+

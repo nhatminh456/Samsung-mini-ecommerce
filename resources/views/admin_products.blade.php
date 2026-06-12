@@ -4,14 +4,13 @@
 
 @section('content')
 <style>
+    /* Giữ nguyên 100% CSS siêu đẹp của bạn */
     .admin-header {
-        /* Đổi đường dẫn ảnh tĩnh sang hàm asset() của Laravel */
-        background: linear-gradient(135deg, rgba(102, 126, 234, 0.95) 0%, rgba(118, 75, 162, 0.9) 100%),
-                    url('{{ asset("images/samsumbanner.jpg") }}') center/cover no-repeat;
+        background: #000000;
         padding: 2.5rem 0;
         margin-bottom: 2.5rem;
         border-radius: 20px;
-        box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
         position: relative;
         overflow: hidden;
     }
@@ -19,10 +18,7 @@
     .admin-header::before {
         content: '';
         position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
+        top: 0; left: 0; right: 0; bottom: 0;
         background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.08'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
         opacity: 0.3;
     }
@@ -51,14 +47,6 @@
         box-shadow: 0 6px 20px rgba(0,0,0,0.3);
     }
     
-    .admin-nav {
-        margin-bottom: 1.5rem;
-    }
-    
-    .admin-nav .btn {
-        margin-right: 0.5rem;
-    }
-    
     .admin-card {
         background: white;
         border-radius: 20px;
@@ -69,28 +57,13 @@
     }
     
     @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
     }
     
-    .admin-card .card-body {
-        padding: 2rem;
-    }
+    .admin-card .card-body { padding: 2rem; }
     
-    .admin-table {
-        margin: 0;
-    }
-    
-    .admin-table thead {
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    }
-    
+    .admin-table thead { background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); }
     .admin-table thead th {
         border: none;
         color: #2d3748;
@@ -132,34 +105,13 @@
         box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
     }
     
-    .product-name {
-        color: #2d3748;
-        font-weight: 600;
-        font-size: 1rem;
-    }
+    .product-name { color: #2d3748; font-weight: 600; font-size: 1rem; }
     
     .product-price {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
+        color: #000000;
         font-weight: 800;
         font-size: 1.15rem;
     }
-    
-    .category-badge {
-        padding: 0.5rem 1rem;
-        border-radius: 50px;
-        font-weight: 600;
-        font-size: 0.85rem;
-        display: inline-block;
-        letter-spacing: 0.5px;
-    }
-    
-    .category-s { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
-    .category-a { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; }
-    .category-m { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; }
-    .category-z { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white; }
     
     .bestseller-yes {
         background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
@@ -196,45 +148,14 @@
         justify-content: center;
     }
     
-    .action-btn i {
-        font-size: 1rem;
-    }
+    .btn-view { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3); }
+    .btn-view:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(79, 172, 254, 0.5); color: white; }
     
-    .btn-view {
-        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        color: white;
-        box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3);
-    }
+    .btn-edit { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; box-shadow: 0 4px 12px rgba(240, 147, 251, 0.3); }
+    .btn-edit:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(240, 147, 251, 0.5); color: white; }
     
-    .btn-view:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(79, 172, 254, 0.5);
-        color: white;
-    }
-    
-    .btn-edit {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        color: white;
-        box-shadow: 0 4px 12px rgba(240, 147, 251, 0.3);
-    }
-    
-    .btn-edit:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(240, 147, 251, 0.5);
-        color: white;
-    }
-    
-    .btn-delete {
-        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
-        color: white;
-        box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
-    }
-    
-    .btn-delete:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(255, 107, 107, 0.5);
-        color: white;
-    }
+    .btn-delete { background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); color: white; box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3); }
+    .btn-delete:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(255, 107, 107, 0.5); color: white; }
     
     .stats-footer {
         background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
@@ -246,29 +167,20 @@
         align-items: center;
     }
     
-    .stats-text {
-        color: #667eea;
-        font-weight: 700;
-        font-size: 1.1rem;
-        margin: 0;
-    }
+    .stats-text { color: #667eea; font-weight: 700; font-size: 1.1rem; margin: 0; }
     
     .stats-icon {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
-        width: 50px;
-        height: 50px;
+        width: 50px; height: 50px;
         border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        display: flex; align-items: center; justify-content: center;
         font-size: 1.5rem;
         box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
     }
     
     .product-image-thumb {
-        width: 60px;
-        height: 60px;
+        width: 60px; height: 60px;
         object-fit: cover;
         border-radius: 12px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
@@ -297,13 +209,14 @@
     <div class="card admin-card">
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table admin-table">
+                <table class="table admin-table align-middle">
                     <thead>
                         <tr>
                             <th>ID</th>
                             <th>Hình ảnh</th>
                             <th>Tên sản phẩm</th>
-                            <th>Giá bán</th>
+                            <th>Giá bán (Từ)</th>
+                            <th>Tổng kho</th>
                             <th>Best Seller</th>
                             <th class="text-center">Thao tác</th>
                         </tr>
@@ -313,15 +226,22 @@
                         <tr>
                             <td><span class="product-id">{{ $product->id }}</span></td>
                             <td>
-                                  <img src="{{ Str::startsWith($product->image_url, ['http', 'data:image']) ? $product->image_url : asset($product->image_url) }}" 
+                                <img src="{{ asset($product->image_url) }}" 
                                       class="product-image-thumb" 
                                       alt="{{ $product->name }}"
                                       onerror="this.src='https://placehold.co/60x60?text=No+Image'">
                             </td>
                             <td><span class="product-name">{{ $product->name }}</span></td>
                             <td><span class="product-price">{{ number_format($product->price ?? 0, 0, ',', '.') }} ₫</span></td>
+                            
                             <td>
-                                @if ($product->bestSeller)
+                                <span class="badge {{ $product->stock_quantity > 0 ? 'bg-success' : 'bg-danger' }} fs-6">
+                                    {{ $product->stock_quantity }}
+                                </span>
+                            </td>
+
+                            <td>
+                                @if ($product->is_bestseller)
                                 <span class="bestseller-yes"><i class="fas fa-star me-1"></i> Yes</span>
                                 @else
                                 <span class="bestseller-no">No</span>
@@ -338,7 +258,7 @@
                                 </a>
                                 <form method="POST" action="{{ url('/admin/product/delete/' . $product->id) }}" 
                                       style="display:inline;" 
-                                      onsubmit="return confirm('Bạn có chắc muốn xóa sản phẩm này?');">
+                                      onsubmit="return confirm('Bạn có chắc muốn xóa sản phẩm này? Mọi hình ảnh và phiên bản cũng sẽ bị xóa theo!');">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="action-btn btn-delete" title="Xóa">
@@ -349,19 +269,19 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="8" class="text-center">Không có sản phẩm nào.</td>
+                            <td colspan="8" class="text-center text-muted py-4">Không có sản phẩm nào trong hệ thống.</td>
                         </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
             
-            <div class="stats-footer">
+            <div class="stats-footer mt-4">
                 <p class="stats-text">
                     <i class="fas fa-box-open me-2"></i>
-                    Tổng số: <strong>{{ count($products ?? []) }}</strong> sản phẩm
+                    Tổng số: <strong>{{ $products->count() }}</strong> sản phẩm
                 </p>
-                <a href="/admin/dashboard" class="stats-icon text-white text-decoration-none">
+                <a href="{{ url('/admin/dashboard') }}" class="stats-icon text-white text-decoration-none">
                     <i class="fas fa-chart-line"></i>
                 </a>
             </div>

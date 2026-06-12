@@ -28,7 +28,7 @@ Route::get('/logout', [AuthController::class, 'logout']);
 
 // Giỏ hàng (Session)
 Route::get('/cart', [CartController::class, 'index']);
-Route::post('/cart/add/{id}', [CartController::class, 'add']);
+Route::post('/cart/add/{id?}', [CartController::class, 'add']);
 Route::put('/cart/update/{id}', [CartController::class, 'update']);
 Route::delete('/cart/remove/{id}', [CartController::class, 'remove']);
 Route::delete('/cart/clear', [CartController::class, 'clear']);
@@ -81,6 +81,7 @@ Route::middleware(['auth', CheckAdmin::class])->group(function () {
     Route::get('/admin/orders', [OrderController::class, 'adminOrders']);
     Route::get('/admin/order/{id}', [OrderController::class, 'adminOrderDetail']);
     Route::post('/admin/order/update-status/{id}', [OrderController::class, 'adminUpdateStatus']);
+    Route::post('/admin/order/confirm-payment/{id}', [OrderController::class, 'adminConfirmPayment'])->name('admin.order.confirm-payment');
     Route::delete('/admin/order/delete/{id}', [OrderController::class, 'adminDestroy']);
 
     // User CRUD

@@ -6,10 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Category extends Model
 {
-    public $timestamps = false;
-
     // Cho phép insert dữ liệu hàng loạt vào các cột này
-    protected $fillable = ['id', 'tenDM'];
+    protected $fillable = ['name'];
 
     // Mối quan hệ 1-N: 1 Danh mục có NHIỀU Sản phẩm
     public function products()
@@ -17,8 +15,8 @@ class Category extends Model
         return $this->hasMany(Product::class);
     }
 
-    public function getNameAttribute()
+    public function getTenDMAttribute()
     {
-        return $this->tenDM;
+        return $this->name;
     }
 }

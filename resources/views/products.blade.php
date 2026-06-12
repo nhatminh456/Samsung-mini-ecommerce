@@ -29,21 +29,7 @@
 </style>
 
 <div class="container my-5">
-    <div class="products-header text-center">
-        <h2 class="products-title">
-            @if (!empty($current_category))
-                <i class="fas fa-mobile-alt me-2"></i>{{ $current_category }}
-            @elseif (!empty($search_keyword))
-                <i class="fas fa-search me-2"></i>Kết quả tìm kiếm: "{{ $search_keyword }}"
-            @else
-                <i class="fas fa-th-large me-2"></i>Tất cả sản phẩm
-            @endif
-        </h2>
-        
-        @if (isset($products) && count($products) > 0)
-        <p class="products-count"><i class="fas fa-box me-2"></i>Tìm thấy {{ count($products) }} sản phẩm</p>
-        @endif
-    </div>
+  
     
     <div class="row">
         @forelse ($products as $product)
