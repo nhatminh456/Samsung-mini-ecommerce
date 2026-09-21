@@ -1,7 +1,7 @@
 @extends('base')
 
 @section('title', 'Trang chủ - SAMSUNG Center')
-
+<link rel="shortcut icon" href="https://resources.samsung.com/etc.clientlibs/samsung/clientlibs/consumer/global/clientlib-common/resources/images/Favicon.png" type="image/x-icon">
 @section('content')
 <div class="hero-section text-white position-relative" style="min-height: 85vh; display: flex; align-items: center; overflow: hidden;">
     <video autoplay muted loop playsinline class="position-absolute w-100 h-100" style="object-fit: cover; z-index: 0;">

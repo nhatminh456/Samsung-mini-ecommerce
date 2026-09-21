@@ -99,4 +99,4 @@ _Truy cập vào địa chỉ `http://localhost:8000` trên trình duyệt để
 | Vai trò        | Email đăng nhập       | Mật khẩu |
 | -------------- | --------------------- | -------- |
 | **Admin**      | nhatminh456@gmail.com | 123456   |
-| **Khách hàng** | cohue@gmail.com       | 123456   |
+| **Khách hàng** | cohue@gmail.com       | 123456   | 

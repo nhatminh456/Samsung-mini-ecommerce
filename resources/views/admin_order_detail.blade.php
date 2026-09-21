@@ -1,7 +1,7 @@
 @extends('base')
 
 @section('title', 'Chi tiết đơn hàng #' . $order->id . ' - Admin')
-
+<link rel="shortcut icon" href="https://resources.samsung.com/etc.clientlibs/samsung/clientlibs/consumer/global/clientlib-common/resources/images/Favicon.png" type="image/x-icon">
 @section('content')
 <div class="container my-5">
     <div class="row">

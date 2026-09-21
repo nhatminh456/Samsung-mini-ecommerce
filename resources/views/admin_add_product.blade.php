@@ -1,7 +1,7 @@
 @extends('base')
 
 @section('title', 'Thêm sản phẩm mới - Admin')
-
+<link rel="shortcut icon" href="https://resources.samsung.com/etc.clientlibs/samsung/clientlibs/consumer/global/clientlib-common/resources/images/Favicon.png" type="image/x-icon">
 @section('content')
 <div class="container my-5">
     <h2 class="mb-4"><i class="fas fa-plus"></i> Thêm sản phẩm mới</h2>

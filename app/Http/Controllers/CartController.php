@@ -17,6 +17,10 @@ class CartController extends Controller
         $total = 0;
 
         foreach ($cartSession as $variantId => $details) {
+            // Lấy thêm tồn kho để hiển thị giới hạn
+            $variant = ProductVariant::find($variantId);
+            $details['stock_quantity'] = $variant ? $variant->stock_quantity : 0;
+
             $details['subtotal'] = $details['price'] * $details['quantity'];
             $total += $details['subtotal'];
             $cart[] = (object) $details;
@@ -73,7 +77,14 @@ class CartController extends Controller
 
         // Dùng Variant ID làm Key của giỏ hàng
         if (isset($cart[$variant->id])) {
-            $cart[$variant->id]['quantity'] += $quantity;
+            $newQuantity = $cart[$variant->id]['quantity'] + $quantity;
+            if ($variant->stock_quantity < $newQuantity) {
+                if ($request->ajax() || $request->wantsJson()) {
+                    return response()->json(['success' => false, 'message' => "Sản phẩm không đủ tồn kho (Tối đa: {$variant->stock_quantity})! Số lượng trong giỏ hàng bạn hiện có: {$cart[$variant->id]['quantity']}"]);
+                }
+                return back()->with('danger', "Sản phẩm không đủ tồn kho (Tối đa: {$variant->stock_quantity})! Số lượng trong giỏ hàng bạn hiện có: {$cart[$variant->id]['quantity']}");
+            }
+            $cart[$variant->id]['quantity'] = $newQuantity;
         } else {
             // Lấy ảnh hiển thị: Ưu tiên ảnh riêng của Variant, không có thì lấy ảnh mặc định của Product
             $imageUrl = $product->images->first() ? $product->images->first()->image_path : 'images/default.jpg';
@@ -105,13 +116,25 @@ class CartController extends Controller
 
     public function update(Request $request, $id)
     {
-        $request->validate(['quantity' => 'required|numeric|min:1|max:99']);
-        $cart = Session::get('cart');
+        $cart = Session::get('cart', []);
 
         if (isset($cart[$id])) {
-            $cart[$id]['quantity'] = $request->quantity;
-            Session::put('cart', $cart);
-            return back()->with('success', 'Đã cập nhật số lượng thành công!');
+            $variant = ProductVariant::find($id);
+            if ($variant) {
+                $request->validate(['quantity' => 'required|numeric|min:1|max:' . $variant->stock_quantity]);
+
+                if ($request->quantity > $variant->stock_quantity) {
+                    $cart[$id]['quantity'] = $variant->stock_quantity;
+                    Session::put('cart', $cart);
+                    return back()->with('warning', "Sản phẩm chỉ còn {$variant->stock_quantity} cái trong kho, số lượng trong giỏ đã được giới hạn tối đa.");
+                }
+
+                $cart[$id]['quantity'] = $request->quantity;
+                Session::put('cart', $cart);
+                return back()->with('success', 'Đã cập nhật số lượng thành công!');
+            }
+
+            return back()->with('danger', 'Không thể kiểm tra tồn kho của sản phẩm này.');
         }
 
         return back()->with('danger', 'Không tìm thấy sản phẩm trong giỏ hàng.');

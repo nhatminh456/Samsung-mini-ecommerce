@@ -52,21 +52,29 @@
                                         <strong>{{ number_format($item->price, 0, ',', '.') }} VNĐ</strong>
                                     </td>
                                     <td>
-                                        <form method="POST" action="{{ url('/cart/update/' . $item->id) }}" class="d-inline">
-                                            @csrf
-                                            @method('PUT')
-                                            <div class="input-group input-group-sm" style="width: 120px;">
-                                                <input type="number" 
-                                                       name="quantity" 
-                                                       value="{{ $item->quantity }}" 
-                                                       min="1" 
-                                                       max="99"
-                                                       class="form-control text-center">
-                                                <button type="submit" class="btn btn-outline-primary" title="Cập nhật">
-                                                    <i class="bi bi-arrow-clockwise"></i>
-                                                </button>
+                                        @if($item->stock_quantity <= 0)
+                                            <div class="alert alert-danger mb-0 py-2 px-3 text-center" role="alert">
+                                                <small class="fw-bold">
+                                                    <i class="bi bi-exclamation-circle me-2"></i>Hết hàng
+                                                </small>
                                             </div>
-                                        </form>
+                                        @else
+                                            <form method="POST" action="{{ url('/cart/update/' . $item->id) }}" class="d-inline">
+                                                @csrf
+                                                @method('PUT')
+                                                <div class="input-group input-group-sm" style="width: 120px;">
+                                                    <input type="number" 
+                                                           name="quantity" 
+                                                           value="{{ $item->quantity }}" 
+                                                           min="1" 
+                                                           max="{{ $item->stock_quantity > 0 ? $item->stock_quantity : 1 }}"
+                                                           class="form-control text-center">
+                                                    <button type="submit" class="btn btn-outline-primary" title="Cập nhật">
+                                                        <i class="bi bi-arrow-clockwise"></i>
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        @endif
                                     </td>
                                     <td>
                                         <strong class="text-primary">{{ number_format($item->subtotal, 0, ',', '.') }} VNĐ</strong>

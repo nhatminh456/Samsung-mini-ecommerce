@@ -1,7 +1,7 @@
 @extends('base')
 
 @section('title', ($current_category ?? 'Sản phẩm') . ' - SAMSUNG Center')
-
+<link rel="shortcut icon" href="https://resources.samsung.com/etc.clientlibs/samsung/clientlibs/consumer/global/clientlib-common/resources/images/Favicon.png" type="image/x-icon">
 @section('content')
 <style>
     .products-header {
@@ -54,9 +54,7 @@
                         </a>
                         
                         @if (session('user_role') == 'admin')
-                        <button type="button" class="btn btn-outline-secondary btn-sm w-100" disabled>
-                            <i class="fas fa-lock"></i> Admin không mua hàng
-                        </button>
+                        
                         @else
                         
                         <form method="POST" action="{{ url('/cart/add/' . $product->id) }}" class="d-inline ajax-add-to-cart">

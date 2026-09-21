@@ -1,5 +1,5 @@
 @extends('base')
-
+<link rel="shortcut icon" href="https://resources.samsung.com/etc.clientlibs/samsung/clientlibs/consumer/global/clientlib-common/resources/images/Favicon.png" type="image/x-icon">
 @section('title', 'Quản lý Người dùng - Admin')
 
 @section('content')

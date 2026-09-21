@@ -123,13 +123,24 @@
                 <h5><i class="fas fa-info-circle me-2"></i> Thông tin sản phẩm</h5>
                 <ul class="list-unstyled mb-0">
                     <li class="mb-2"><strong>Danh mục:</strong> <span class="text-primary fw-bold">{{ $product->category->name ?? 'Chưa xác định' }}</span></li>
-                    <li class="mb-0"><strong>Tình trạng kho:</strong> <span id="displayStock" class="text-success fw-bold">{{ $firstVariant ? $firstVariant->stock_quantity : 0 }}</span> sản phẩm</li>
+                    <li class="mb-0">
+                        <strong>Tình trạng kho:</strong> 
+                        @if($firstVariant && $firstVariant->stock_quantity > 0)
+                            <span id="displayStock" class="text-success fw-bold">{{ $firstVariant->stock_quantity }}</span> sản phẩm
+                        @else
+                            <span id="displayStock" class="text-danger fw-bold badge bg-danger">HẾT HÀNG</span>
+                        @endif
+                    </li>
                 </ul>
             </div>
             
             @if(session('user_role') == 'admin')
                 <div class="alert alert-warning mb-3 fw-bold">
                     <i class="fas fa-exclamation-triangle"></i> Tài khoản admin không có quyền đặt hàng.
+                </div>
+            @elseif($firstVariant && $firstVariant->stock_quantity <= 0)
+                <div class="alert alert-danger mb-3 fw-bold text-center py-3">
+                    <i class="fas fa-times-circle me-2"></i> Sản phẩm này hiện đã hết hàng, vui lòng quay lại sau!
                 </div>
             @else
                 <form method="POST" action="{{ url('/cart/add') }}" class="mb-4">
@@ -147,9 +158,13 @@
                                            value="{{ $variant->id }}" 
                                            data-price="{{ $variant->price }}" 
                                            data-stock="{{ $variant->stock_quantity }}"
-                                           {{ $index == 0 ? 'checked' : '' }}>
-                                    <label class="variant-label" for="variant_{{ $variant->id }}">
+                                           {{ $index == 0 ? 'checked' : '' }}
+                                           {{ $variant->stock_quantity <= 0 ? 'disabled' : '' }}>
+                                    <label class="variant-label" for="variant_{{ $variant->id }}" style="{{ $variant->stock_quantity <= 0 ? 'opacity: 0.5; cursor: not-allowed;' : '' }}">
                                         {{ $variant->color }} - {{ $variant->storage }}
+                                        @if($variant->stock_quantity <= 0)
+                                            <span class="badge bg-danger ms-2">Hết</span>
+                                        @endif
                                     </label>
                                 </div>
                             @endforeach
@@ -160,7 +175,7 @@
                     <div class="row g-3 align-items-end">
                         <div class="col-md-3">
                             <label for="quantity" class="form-label fw-bold">Số lượng:</label>
-                            <input type="number" class="form-control form-control-lg" name="quantity" id="quantity" value="1" min="1" max="99">
+                            <input type="number" class="form-control form-control-lg" name="quantity" id="quantity" value="1" min="1" max="{{ $firstVariant ? $firstVariant->stock_quantity : 1 }}">
                         </div>
                         <div class="col-md-9">
                             <button type="submit" class="btn btn-add-cart w-100 text-white btn-lg">
@@ -228,20 +243,33 @@
     document.querySelectorAll('.variant-radio').forEach(radio => {
         radio.addEventListener('change', function() {
             const price = this.getAttribute('data-price');
-            const stock = this.getAttribute('data-stock');
+            const stock = parseInt(this.getAttribute('data-stock'));
 
             // Cập nhật giá
             document.getElementById('displayPrice').innerText =
                 new Intl.NumberFormat('vi-VN').format(price) + ' VNĐ';
 
-            // Cập nhật tồn kho
-            document.getElementById('displayStock').innerText = stock;
-
-            // Cập nhật max số lượng
+            // Cập nhật tồn kho và hiển thị badge hết hàng nếu cần
+            const displayStockEl = document.getElementById('displayStock');
             const qtyInput = document.getElementById('quantity');
-            qtyInput.max = stock;
-            if (parseInt(qtyInput.value) > parseInt(stock)) {
-                qtyInput.value = stock;
+            const submitBtn = document.querySelector('.btn-add-cart');
+            
+            if (stock <= 0) {
+                displayStockEl.innerHTML = '<span class="badge bg-danger">HẾT HÀNG</span>';
+                qtyInput.disabled = true;
+                qtyInput.value = 1;
+                submitBtn.disabled = true;
+                submitBtn.style.opacity = '0.5';
+            } else {
+                displayStockEl.innerHTML = stock;
+                displayStockEl.className = 'text-success fw-bold';
+                qtyInput.disabled = false;
+                qtyInput.max = stock;
+                if (parseInt(qtyInput.value) > stock) {
+                    qtyInput.value = stock;
+                }
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = '1';
             }
 
             // Đổi ảnh theo variant
@@ -250,9 +278,19 @@
     });
 
     // Load ảnh variant đầu tiên khi vào trang
-    const firstRadio = document.querySelector('.variant-radio');
+    const firstRadio = document.querySelector('.variant-radio:not(:disabled)');
     if (firstRadio) {
         loadVariantImages(firstRadio.value);
+        // Kiểm tra nếu variant đầu tiên hết hàng
+        const firstStock = parseInt(firstRadio.getAttribute('data-stock'));
+        if (firstStock <= 0) {
+            document.getElementById('quantity').disabled = true;
+            const submitBtn = document.querySelector('.btn-add-cart');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.style.opacity = '0.5';
+            }
+        }
     } else {
         document.getElementById('mainProductImage').src = defaultImage;
     }

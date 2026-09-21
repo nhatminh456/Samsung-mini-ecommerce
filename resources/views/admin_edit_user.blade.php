@@ -1,7 +1,7 @@
 @extends('base')
 
 @section('title', 'Sửa Người dùng - Admin')
-
+<link rel="shortcut icon" href="https://resources.samsung.com/etc.clientlibs/samsung/clientlibs/consumer/global/clientlib-common/resources/images/Favicon.png" type="image/x-icon">
 @section('content')
 <style>
     .form-container {

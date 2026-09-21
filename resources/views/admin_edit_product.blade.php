@@ -1,7 +1,7 @@
 @extends('base')
 
 @section('title', 'Sửa sản phẩm - Admin')
-
+<link rel="shortcut icon" href="https://resources.samsung.com/etc.clientlibs/samsung/clientlibs/consumer/global/clientlib-common/resources/images/Favicon.png" type="image/x-icon">
 @section('content')
 <div class="container my-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
