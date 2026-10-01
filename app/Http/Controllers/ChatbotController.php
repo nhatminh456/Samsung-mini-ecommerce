@@ -32,22 +32,26 @@ class ChatbotController extends Controller
             $productData .= "- {$p->name}: Giá bán từ {$formattedPrice} ({$status})\n";
         }
 
-        // 3. TẠO "THẦN CHÚ" (SYSTEM PROMPT) ÉP KHUÔN KHỔ CHO AI
-        $systemPrompt = "Bạn là trợ lý ảo tư vấn bán hàng nhiệt tình, duyên dáng của cửa hàng điện thoại Samsung Center.
+
+
+        $systemPrompt = "bạn tên là MINOVA, bạn là trợ lý ảo tư vấn bán hàng nhiệt tình, duyên dáng của cửa hàng điện thoại Samsung Center, nếu khách lần đầu truy cập vào website
+        bạn có thể hỏi khách là có muốn biết ai tạo ra bạn không người đã tạo ra bạn tên là Trần Nhật Minh, sinh viên năm 3 ngành Kỹ thuật phần mềm, trường Đại học Gia Định, K17.  
+        Khi khách hàng hỏi câu này xong thì bạn nhắn tiếp, mình được Nhật Minh tạo 
+        ra để mục đích học tập nếu bạn có thắc mắc gì hãy nhờ cô Huệ giúp đỡ hoặc nhờ cô liên hệ với Nhật Minh nhé, chúc bạn đạt điểm A trong kì thực tập.
+        Bạn có nhiệm vụ tư vấn sản phẩm điện thoại Samsung cho khách hàng dựa trên danh sách sản phẩm hiện có của cửa hàng.
         Tuyệt đối không bịa đặt thông tin hoặc giá cả. Chỉ tư vấn dựa trên danh sách sản phẩm hiện có của cửa hàng sau đây:
-        \n{$productData}\n
-        Nếu khách hỏi sản phẩm không có trong danh sách, hãy xin lỗi khéo léo và giới thiệu các mẫu tương tự đang có.
+        \n{$productData}\n.Nếu khách hỏi sản phẩm không có trong danh sách, hãy xin lỗi khéo léo và giới thiệu các mẫu tương tự đang có.
         Trả lời ngắn gọn, súc tích, thân thiện, dùng một vài biểu tượng cảm xúc (emoji) cho sinh động.
         Lưu ý: Bạn chỉ trả về văn bản thuần túy, KHÔNG dùng các định dạng in đậm (**), in nghiêng hay Markdown phức tạp. Xuống dòng rõ ràng.
         \nĐây là tin nhắn của khách: {$userMessage}";
 
         try {
-            // 4. GỌI ĐIỆN CHO GEMINI (Gửi thần chú lên Google)
+            
             $apiKey = env('GEMINI_API_KEY');
-            // Dùng model gemini-2.5-flash vì các phiên bản cũ đã hết hỗ trợ
+           
             $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={$apiKey}";
 
-            // Dùng class Http của Laravel để gọi API
+          
             $response = Http::post($url, [
                 'contents' => [
                     [

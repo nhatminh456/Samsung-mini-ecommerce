@@ -3,8 +3,8 @@ const chatbot = {
     init() {
         this.setupEventListeners();
         this.addBotMessage(
-            'Xin chào! Mình là trợ lý ảo của SAMSUNG Center.\n' +
-            'Bạn đang tìm kiếm sản phẩm nào, hay cần tư vấn mức giá bao nhiêu ạ?'
+            'Xin chào! Mình là MINOVA, mình là trợ lý ảo được tạo ra để giúp bạn tư vấn và mua sắm sản phẩm điện thoại Samsung.\n' +
+            'Bạn đang tìm kiếm sản phẩm nào, hay cần tư vấn mức giá bao nhiêu ạ?, nếu đây là lần đầu tiên bạn truy cập vào website, bạn có muốn biết ai tạo ra mình không?'
         );
     },
 
